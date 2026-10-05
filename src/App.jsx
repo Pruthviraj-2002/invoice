@@ -4,9 +4,10 @@ import { toPng } from "html-to-image";
 import { 
   Plus, Download, Printer, Settings, FileText, CheckCircle, Save, Trash2, 
   Building2, Users, Eye, FileBox, Search, ArrowLeft, Edit3, Paperclip, 
-  Database, UploadCloud, FileSpreadsheet, Package, AlertTriangle
+  Database, UploadCloud, FileSpreadsheet, Package, AlertTriangle, Share2
 } from 'lucide-react';
 import InvoicePreview from './InvoicePreview';
+import { supabase } from './supabase';
 import { 
   DEFAULT_COMPANY_SETTINGS, calculateTaxes, getNextInvoiceNumber, 
   useLocalStorage, formatCurrency 
@@ -26,6 +27,8 @@ export default function App() {
 
   const defaultInvoiceState = useMemo(() => ({
     id: null,
+    supabaseId: null,
+    shareableLink: null,
     docType: 'INV', 
     invoiceNumber: '', 
     attachment: null,
@@ -155,7 +158,7 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  const saveInvoice = () => {
+  const saveInvoice = async () => {
     if (!currentInvoice.customer.name.trim()) {
       triggerToast("Client name is required.", "error");
       return;
@@ -185,6 +188,43 @@ export default function App() {
       status: resolvedStatus
     };
 
+    // --- SUPABASE CLOUD SAVE LOGIC ---
+    triggerToast("Saving to cloud...", "info");
+    try {
+      let supabaseResult;
+      if (finalizedDoc.supabaseId) {
+        // Update existing cloud document
+        supabaseResult = await supabase
+          .from('invoices')
+          .update({ invoice_data: finalizedDoc })
+          .eq('id', finalizedDoc.supabaseId)
+          .select()
+          .single();
+      } else {
+        // Insert new cloud document
+        supabaseResult = await supabase
+          .from('invoices')
+          .insert([{ invoice_data: finalizedDoc }])
+          .select()
+          .single();
+      }
+
+      const { data, error } = supabaseResult;
+      
+      if (!error && data) {
+        finalizedDoc.supabaseId = data.id;
+        finalizedDoc.shareableLink = `${window.location.origin}/invoice/${data.id}`;
+        triggerToast(`Document ${invNumber} saved & synced to cloud!`);
+      } else {
+        console.error("Supabase Error:", error);
+        triggerToast("Saved locally, but cloud sync failed.", "error");
+      }
+    } catch (err) {
+      console.error("Supabase Exception:", err);
+      triggerToast("Saved locally, but cloud sync failed.", "error");
+    }
+    // --- END SUPABASE LOGIC ---
+
     if (!clientCatalog.some(c => c.name.toLowerCase() === finalizedDoc.customer.name.toLowerCase())) {
       setClientCatalog(prev => [...prev, {
         id: `client-${Date.now()}`,
@@ -206,7 +246,6 @@ export default function App() {
     }
     
     setCurrentInvoice(finalizedDoc);
-    triggerToast(`Document ${invNumber} saved successfully`);
     setView('INVOICES');
   };
 
@@ -562,6 +601,20 @@ export default function App() {
                 </div>
               </div>
               <div className="flex space-x-3">
+                
+                {/* NEW SHARE LINK BUTTON */}
+                {currentInvoice.shareableLink && (
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(currentInvoice.shareableLink);
+                      triggerToast("Public link copied to clipboard!");
+                    }} 
+                    className="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 px-5 py-3 rounded-2xl text-xs font-bold flex items-center space-x-2 transition-all"
+                  >
+                    <Share2 size={16} /><span>Copy Link</span>
+                  </button>
+                )}
+
                 <button onClick={() => { setCurrentInvoice(currentInvoice); setView('CREATE'); }} className="bg-slate-800 hover:bg-slate-700 text-indigo-400 px-5 py-3 rounded-2xl text-xs font-bold flex items-center space-x-2 transition-all">
                   <Edit3 size={16} /><span>Edit Document</span>
                 </button>
@@ -597,7 +650,7 @@ export default function App() {
                 <p className="text-xs text-slate-400">Interactive form engine; live preview updates dynamically.</p>
               </div>
               <div className="flex space-x-3">
-                <button onClick={saveInvoice} className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-2xl text-xs font-bold flex items-center space-x-2 shadow-lg shadow-emerald-900/30 transition-all"><Save size={16}/><span>Save Document</span></button>
+                <button onClick={saveInvoice} className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-2xl text-xs font-bold flex items-center space-x-2 shadow-lg shadow-emerald-900/30 transition-all"><Save size={16}/><span>Save & Generate Link</span></button>
                 <button onClick={() => window.print()} className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-3 rounded-2xl text-xs font-bold flex items-center space-x-2 transition-all"><Printer size={16}/><span>Print</span></button>
                 <button onClick={generatePDF} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-5 py-3 rounded-2xl text-xs font-bold flex items-center space-x-2 shadow-lg shadow-blue-900/30 transition-all"><Download size={16}/><span>Download PDF</span></button>
               </div>
