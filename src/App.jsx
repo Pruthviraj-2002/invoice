@@ -66,6 +66,47 @@ export default function App() {
     setTimeout(() => setToast(null), 3500);
   };
 
+  // --- NEW: FETCH CLOUD INVOICES ON APP LOAD ---
+  useEffect(() => {
+    const fetchCloudInvoices = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('invoices')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error("Error fetching cloud documents:", error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          const cloudInvoices = data.map(item => ({
+            ...item.invoice_data,
+            supabaseId: item.id,
+            shareableLink: `${window.location.origin}/invoice/${item.id}`
+          }));
+          
+          // Merge cloud invoices with local ones, preferring cloud data to avoid duplicates
+          setInvoices(prevLocalInvoices => {
+            const merged = [...cloudInvoices];
+            prevLocalInvoices.forEach(localInv => {
+              if (!merged.some(cloudInv => cloudInv.invoiceNumber === localInv.invoiceNumber)) {
+                merged.push(localInv);
+              }
+            });
+            return merged;
+          });
+        }
+      } catch (err) {
+        console.error("Cloud fetch failed:", err);
+      }
+    };
+
+    fetchCloudInvoices();
+  }, []);
+  // ---------------------------------------------
+
   useEffect(() => {
     const targetState = currentInvoice.shippingSameAsBilling ? currentInvoice.customer.billingState : currentInvoice.customer.shippingState;
     const isInterstate = (targetState || '').trim().toLowerCase() !== (companySettings.state || '').trim().toLowerCase();
