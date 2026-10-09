@@ -420,6 +420,8 @@ export default function App() {
       (inv.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
+  const issuedInvoices = invoices.filter(inv => inv.docType === 'INV' || inv.docType === 'UPLOAD');
+  const grossTurnover = issuedInvoices.reduce((total, invoice) => total + (invoice.totals?.grandTotal || 0), 0);
 
   const getDocTypeName = (code) => {
     const types = { 'INV': 'Invoice', 'EST': 'Quotation', 'PO': 'Purchase Order', 'DC': 'Delivery Challan' };
@@ -577,10 +579,27 @@ export default function App() {
                   </div>
                 )}
               </div>
-              <div className="bg-[#161922] p-6 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden">
-                <p className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">Gross Turnaround</p>
-                <p className="text-3xl font-black text-indigo-400 mt-3">{formatCurrency(invoices.reduce((acc, inv) => acc + (inv.totals?.grandTotal || 0), 0))}</p>
-                <p className="text-xs text-slate-400 mt-2 font-medium">Cumulated document volume</p>
+              <div
+                tabIndex={0}
+                aria-label="Gross turnover invoice details"
+                className="group bg-[#161922] p-6 rounded-3xl border border-slate-800 shadow-2xl relative z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              >
+                <p className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">Gross Turnover</p>
+                <p className="text-3xl font-black text-indigo-400 mt-3">{formatCurrency(grossTurnover)}</p>
+                <p className="text-xs text-slate-400 mt-2 font-medium">Total value of issued invoices</p>
+                <div className="hidden group-hover:block group-focus-within:block absolute left-0 right-0 top-full mt-2 p-4 rounded-2xl border border-slate-700 bg-[#1B1F2B] shadow-2xl">
+                  <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-3">Invoice amounts</p>
+                  <div className="max-h-56 overflow-y-auto">
+                    {issuedInvoices.length > 0 ? issuedInvoices.map((invoice, index) => (
+                      <div key={invoice.id || `${invoice.invoiceNumber}-${index}`} className="flex justify-between items-center gap-4 py-1.5 text-xs">
+                        <span className="text-slate-300 font-mono truncate">{invoice.invoiceNumber || 'Invoice'}</span>
+                        <span className="font-bold text-white tabular-nums whitespace-nowrap">{formatCurrency(invoice.totals?.grandTotal || 0)}</span>
+                      </div>
+                    )) : (
+                      <p className="text-xs text-slate-400">No invoices recorded.</p>
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="bg-[#161922] p-6 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden">
                 <p className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">Pending Receivables</p>
