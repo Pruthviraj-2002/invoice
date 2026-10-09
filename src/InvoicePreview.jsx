@@ -49,7 +49,7 @@ const InvoicePreview = React.forwardRef(({ data, company }, ref) => {
               <div className="border-t border-gray-300 pt-2">
                 <p className="font-bold text-gray-500 text-[10px] uppercase tracking-wider mb-1">Customer Details:</p>
                 <p className="font-bold text-[11px] text-black">{data.customer.name || 'Default Customer'}</p>
-                {data.customer.gstin && <p className="mt-0.5 text-[10px] font-bold text-gray-800">GSTIN: {data.customer.gstin}</p>}
+                {data.customer.gstin && <p className="mt-0.5 text-[10px] font-bold text-gray-800">GSTIN: {data.customer.gstin.toUpperCase()}</p>}
                 <p className="whitespace-pre-line mt-1 text-[10px] text-gray-800 leading-snug">
                   {data.customer.billingStreet ? `${data.customer.billingStreet}, ` : ''}
                   {data.customer.billingCity ? `${data.customer.billingCity}, ` : ''}
@@ -313,7 +313,7 @@ const InvoicePreview = React.forwardRef(({ data, company }, ref) => {
           <div className="p-2 border-r border-black">
             <p className="font-bold mb-1 text-gray-500 text-[9px] uppercase tracking-wider">{currentDoc.targetLabel}</p>
             <p className="font-bold text-[11px]">{data.customer.name || 'Enter Name'}</p>
-            {data.customer.gstin && <p className="mt-0.5 font-bold text-gray-800 text-[10px]">GSTIN: {data.customer.gstin}</p>}
+            {data.customer.gstin && <p className="mt-0.5 font-bold text-gray-800 text-[10px]">GSTIN: {data.customer.gstin.toUpperCase()}</p>}
             <p className="mt-1 text-[10px] text-gray-800 leading-snug">
               {data.customer.billingStreet ? `${data.customer.billingStreet}, ` : ''}<br/>
               {data.customer.billingCity ? `${data.customer.billingCity}, ` : ''}

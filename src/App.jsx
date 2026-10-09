@@ -786,7 +786,7 @@ export default function App() {
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">GSTIN</label>
-                  <input type="text" placeholder="36GOVPK7075A1ZH" className="bg-[#0A0B10] border border-slate-800 text-white w-full p-3.5 rounded-2xl text-xs mt-2 uppercase focus:border-indigo-500 outline-none font-mono" value={currentInvoice.customer.gstin} onChange={e => setCurrentInvoice({...currentInvoice, customer: {...currentInvoice.customer, gstin: e.target.value}})} />
+                  <input type="text" placeholder="36GOVPK7075A1ZH" className="bg-[#0A0B10] border border-slate-800 text-white w-full p-3.5 rounded-2xl text-xs mt-2 uppercase focus:border-indigo-500 outline-none font-mono" value={currentInvoice.customer.gstin} onChange={e => setCurrentInvoice({...currentInvoice, customer: {...currentInvoice.customer, gstin: e.target.value.toUpperCase()}})} />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Phone</label>
