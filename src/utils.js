@@ -65,6 +65,11 @@ export const getNextInvoiceNumber = (dateStr, allInvoices, docType = 'INV') => {
   return `${prefix}${String(maxSeq + 1).padStart(3, '0')}`;
 };
 
+const roundMoney = (value) => {
+  const safeValue = Number.isFinite(Number(value)) ? Number(value) : 0;
+  return Number(Math.round((safeValue + Number.EPSILON) * 100) / 100);
+};
+
 export const calculateTaxes = (items, isInterstate) => {
   let subtotal = 0, totalDiscount = 0, taxableAmount = 0;
   let cgst = 0, sgst = 0, igst = 0;
@@ -76,35 +81,42 @@ export const calculateTaxes = (items, isInterstate) => {
     const disc = parseFloat(item.discount) || 0;
     const taxRate = parseFloat(item.taxRate) || 0;
     
-    const baseAmount = qty * rate;
-    const itemTaxable = Math.max(0, baseAmount - disc);
-    const taxAmt = itemTaxable * (taxRate / 100);
+    const baseAmount = roundMoney(qty * rate);
+    const itemTaxable = roundMoney(Math.max(0, baseAmount - disc));
+    const taxAmt = roundMoney(itemTaxable * (taxRate / 100));
     
-    subtotal += baseAmount;
-    totalDiscount += disc;
-    taxableAmount += itemTaxable;
+    subtotal = roundMoney(subtotal + baseAmount);
+    totalDiscount = roundMoney(totalDiscount + disc);
+    taxableAmount = roundMoney(taxableAmount + itemTaxable);
 
     const key = item.hsnSac?.trim() || 'GENERAL';
     if (!taxSummary[key]) {
       taxSummary[key] = { taxable: 0, taxRate: taxRate, cgst: 0, sgst: 0, igst: 0 };
     }
-    taxSummary[key].taxable += itemTaxable;
+    taxSummary[key].taxable = roundMoney(taxSummary[key].taxable + itemTaxable);
 
     if (isInterstate) {
-      igst += taxAmt;
-      taxSummary[key].igst += taxAmt;
+      igst = roundMoney(igst + taxAmt);
+      taxSummary[key].igst = roundMoney(taxSummary[key].igst + taxAmt);
     } else {
-      cgst += taxAmt / 2;
-      sgst += taxAmt / 2;
-      taxSummary[key].cgst += taxAmt / 2;
-      taxSummary[key].sgst += taxAmt / 2;
+      const itemCgst = roundMoney(taxAmt / 2);
+      const itemSgst = roundMoney(taxAmt / 2);
+      cgst = roundMoney(cgst + itemCgst);
+      sgst = roundMoney(sgst + itemSgst);
+      taxSummary[key].cgst = roundMoney(taxSummary[key].cgst + itemCgst);
+      taxSummary[key].sgst = roundMoney(taxSummary[key].sgst + itemSgst);
     }
   });
+
+  const unroundedGrandTotal = roundMoney(taxableAmount + cgst + sgst + igst);
+  const grandTotal = Math.round(unroundedGrandTotal / 100) * 100;
+  const roundOff = roundMoney(grandTotal - unroundedGrandTotal);
 
   return { 
     subtotal, totalDiscount, taxableAmount, 
     cgst, sgst, igst, 
-    grandTotal: taxableAmount + cgst + sgst + igst,
+    grandTotal,
+    roundOff,
     taxSummary 
   };
 };

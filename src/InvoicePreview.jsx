@@ -176,6 +176,13 @@ const InvoicePreview = React.forwardRef(({ data, company }, ref) => {
                   </tr>
                 )}
 
+                {Number(data.totals.roundOff || 0) !== 0 && (
+                  <tr className="font-bold text-[10px] border-b border-gray-200">
+                    <td className="border-r border-black p-2.5 text-right text-gray-700">Round Off</td>
+                    <td className="p-2.5 text-right pr-2">{formatCurrency(data.totals.roundOff)}</td>
+                  </tr>
+                )}
+
                 <tr className="font-bold text-[12px] bg-gray-50">
                   <td className="border-r border-black p-3 text-right">Grand Total</td>
                   <td className="p-3 text-right pr-2">{formatCurrency(data.totals.grandTotal)}</td>
@@ -433,6 +440,12 @@ const InvoicePreview = React.forwardRef(({ data, company }, ref) => {
                     <tr className="border-b border-black">
                       <td className="border-r border-black p-1 text-right font-bold text-gray-700 text-[10px]">IGST 18.0%</td>
                       <td className="p-1 text-right pr-2">{formatCurrency(data.totals.igst)}</td>
+                    </tr>
+                  )}
+                  {Number(data.totals.roundOff || 0) !== 0 && (
+                    <tr className="border-b border-gray-200">
+                      <td className="border-r border-black p-1 text-right font-bold text-gray-700 text-[10px]">Round Off</td>
+                      <td className="p-1 text-right pr-2">{formatCurrency(data.totals.roundOff)}</td>
                     </tr>
                   )}
                   <tr className="font-bold text-[12px] bg-gray-50 border-b border-black">
