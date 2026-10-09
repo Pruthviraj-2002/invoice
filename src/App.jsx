@@ -24,6 +24,7 @@ export default function App() {
   const [filterType, setFilterType] = useState('ALL');
   const [toast, setToast] = useState(null);
   const [activeModal, setActiveModal] = useState(null); 
+  const [issuedBreakdownOpen, setIssuedBreakdownOpen] = useState(false);
 
   const defaultInvoiceState = useMemo(() => ({
     id: null,
@@ -530,10 +531,51 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-[#161922] p-6 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden">
-                <p className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">Total Issued</p>
-                <p className="text-4xl font-black text-white mt-3">{invoices.length}</p>
-                <p className="text-xs text-slate-400 mt-2 font-medium">All recorded entities</p>
+              <div
+                className="bg-[#161922] p-6 rounded-3xl border border-slate-800 shadow-2xl relative z-10"
+                onMouseEnter={() => setIssuedBreakdownOpen(true)}
+                onMouseLeave={() => setIssuedBreakdownOpen(false)}
+              >
+                <button
+                  type="button"
+                  aria-haspopup="true"
+                  aria-expanded={issuedBreakdownOpen}
+                  onClick={() => {
+                    setIssuedBreakdownOpen(false);
+                    setView('INVOICES');
+                  }}
+                  onKeyDown={event => {
+                    if (event.key === 'Escape') setIssuedBreakdownOpen(false);
+                  }}
+                  className="w-full text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                >
+                  <span className="block text-slate-500 font-bold text-[10px] uppercase tracking-widest">Total Issued</span>
+                  <span className="block text-4xl font-black text-white mt-3">{invoices.length}</span>
+                  <span className="block text-xs text-slate-400 mt-2 font-medium">All recorded entities</span>
+                </button>
+                {issuedBreakdownOpen && (
+                  <div className="absolute left-0 right-0 top-full mt-2 p-4 rounded-2xl border border-slate-700 bg-[#1B1F2B] shadow-2xl">
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-3">Documents by type</p>
+                    {[
+                      { type: 'INV', label: 'Invoices' },
+                      { type: 'EST', label: 'Quotations' },
+                      { type: 'PO', label: 'Purchase Orders' },
+                      { type: 'DC', label: 'Delivery Challans' }
+                    ].map(({ type, label }) => {
+                      const count = invoices.filter(invoice =>
+                        type === 'INV'
+                          ? invoice.docType === 'INV' || invoice.docType === 'UPLOAD'
+                          : invoice.docType === type
+                      ).length;
+                      return (
+                        <div key={type} className="flex justify-between items-center py-1.5 text-xs">
+                          <span className="text-slate-300">{label}</span>
+                          <span className="font-bold text-white tabular-nums">{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div className="bg-[#161922] p-6 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden">
                 <p className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">Gross Turnaround</p>
