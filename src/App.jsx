@@ -945,15 +945,17 @@ export default function App() {
                           </button>
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                      <div className={`grid grid-cols-1 gap-4 ${currentInvoice.docType === 'EST' ? 'md:grid-cols-5' : 'md:grid-cols-6'}`}>
                         <div className="md:col-span-2">
                           <label className="text-[9px] font-bold text-slate-500 uppercase">Description</label>
                           <input type="text" className="bg-[#161922] border border-slate-800 text-white w-full p-2.5 rounded-xl text-xs mt-1" value={item.description} onChange={e => handleItemChange(idx, 'description', e.target.value)} />
                         </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-500 uppercase">HSN/SAC</label>
-                          <input type="text" className="bg-[#161922] border border-slate-800 text-white w-full p-2.5 rounded-xl text-xs mt-1 font-mono" value={item.hsnSac} onChange={e => handleItemChange(idx, 'hsnSac', e.target.value)} />
-                        </div>
+                        {currentInvoice.docType !== 'EST' && (
+                          <div>
+                            <label className="text-[9px] font-bold text-slate-500 uppercase">HSN/SAC</label>
+                            <input type="text" className="bg-[#161922] border border-slate-800 text-white w-full p-2.5 rounded-xl text-xs mt-1 font-mono" value={item.hsnSac} onChange={e => handleItemChange(idx, 'hsnSac', e.target.value)} />
+                          </div>
+                        )}
                         <div>
                           <label className="text-[9px] font-bold text-slate-500 uppercase">Quantity</label>
                           <input type="number" className="bg-[#161922] border border-slate-800 text-white w-full p-2.5 rounded-xl text-xs mt-1" value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} />

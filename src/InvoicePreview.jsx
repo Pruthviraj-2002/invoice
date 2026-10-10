@@ -101,17 +101,17 @@ const InvoicePreview = React.forwardRef(({ data, company }, ref) => {
               <table className="w-full h-full border-collapse text-center" style={{ tableLayout: 'fixed' }}>
                 <colgroup>
                   <col style={{ width: '5%' }} />
-                  <col style={{ width: '51%' }} />
-                  <col style={{ width: '12%' }} />
-                  <col style={{ width: '12%' }} />
-                  <col style={{ width: '8%' }} />
+                  <col style={{ width: isQuote ? '59%' : '51%' }} />
+                  {!isQuote && <col style={{ width: '12%' }} />}
+                  <col style={{ width: isQuote ? '14%' : '12%' }} />
+                  <col style={{ width: isQuote ? '10%' : '8%' }} />
                   <col style={{ width: '12%' }} />
                 </colgroup>
                 <thead className="bg-gray-100 text-gray-800 uppercase font-bold text-[9px] shrink-0">
                   <tr className="border-b border-black">
                     <th className="border-r border-black p-2">#</th>
                     <th className="border-r border-black p-2 text-left">Item Description</th>
-                    <th className="border-r border-black p-2">HSN/SAC</th>
+                    {!isQuote && <th className="border-r border-black p-2">HSN/SAC</th>}
                     <th className="border-r border-black p-2">Rate / Item</th>
                     <th className="border-r border-black p-2">Qty</th>
                     <th className="p-2">Amount</th>
@@ -125,7 +125,7 @@ const InvoicePreview = React.forwardRef(({ data, company }, ref) => {
                       <tr key={idx} className="border-b border-gray-200 h-7">
                         <td className="border-r border-black p-2 overflow-hidden">{idx + 1}</td>
                         <td className="border-r border-black p-2 text-left font-bold text-[10px] wrap-break-words">{item.description}</td>
-                        <td className="border-r border-black p-2">{item.hsnSac || '00000000'}</td>
+                        {!isQuote && <td className="border-r border-black p-2">{item.hsnSac || '00000000'}</td>}
                         <td className="border-r border-black p-2">{parseFloat(item.rate || 0).toFixed(2)}</td>
                         <td className="border-r border-black p-2 font-bold">{item.quantity} {item.unit}</td>
                         <td className="p-2 text-right font-bold pr-2">{baseAmount.toFixed(2)}</td>
@@ -133,11 +133,10 @@ const InvoicePreview = React.forwardRef(({ data, company }, ref) => {
                     );
                   })}
                   
-                  {/* PERFECT ALIGNMENT: 6-COLUMN SPACER ROW */}
                   <tr className="h-full">
                     <td className="border-r border-black"></td>
                     <td className="border-r border-black"></td>
-                    <td className="border-r border-black"></td>
+                    {!isQuote && <td className="border-r border-black"></td>}
                     <td className="border-r border-black"></td>
                     <td className="border-r border-black"></td>
                     <td></td>

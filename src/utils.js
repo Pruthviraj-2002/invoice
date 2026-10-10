@@ -109,7 +109,7 @@ export const calculateTaxes = (items, isInterstate) => {
   });
 
   const unroundedGrandTotal = roundMoney(taxableAmount + cgst + sgst + igst);
-  const grandTotal = Math.round(unroundedGrandTotal / 100) * 100;
+  const grandTotal = Math.round(unroundedGrandTotal);
   const roundOff = roundMoney(grandTotal - unroundedGrandTotal);
 
   return { 
