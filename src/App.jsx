@@ -772,7 +772,7 @@ export default function App() {
                       const newType = e.target.value;
                       let newTerms = companySettings.terms;
                       if (newType === 'EST') {
-                        newTerms = "Validity: This quotation is valid for 30 days from the date of issue.\nPayment Terms: A 50% advance payment is required upon order confirmation. The remaining 50% balance is due at the time of delivery.\nDelivery Timeline: The estimated delivery period is 10 to 12 weeks from the receipt of the advance payment.\nExclusions: Shipping, handling, and installation charges are not included in this quotation and will be billed separately.";
+                        newTerms = "Validity: This quotation is valid for 30 days from the date of issue.\nPayment Terms: A 50% advance payment is required upon order confirmation. The remaining 50% balance is due at the time of delivery.";
                       }
                       setCurrentInvoice({...currentInvoice, docType: newType, terms: newTerms});
                     }}

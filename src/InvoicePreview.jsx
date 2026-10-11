@@ -239,7 +239,9 @@ const InvoicePreview = React.forwardRef(({ data, company }, ref) => {
             <div className="p-3">
               <p className="font-bold text-gray-500 uppercase tracking-wider mb-1">Terms & Conditions:</p>
               <ul className="list-disc pl-3 mt-0.5 leading-snug text-gray-800 space-y-0.5">
-                {data.terms.split('\n').map((term, i) => (
+                {data.terms.split('\n')
+                  .filter(term => !/^(Delivery Timeline|Exclusions):/i.test(term.trim()))
+                  .map((term, i) => (
                   term.trim() ? <li key={i}>{term.trim()}</li> : null
                 ))}
               </ul>
