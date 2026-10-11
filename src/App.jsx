@@ -772,7 +772,7 @@ export default function App() {
                       const newType = e.target.value;
                       let newTerms = companySettings.terms;
                       if (newType === 'EST') {
-                        newTerms = "Validity: This quotation is valid for 30 days from the date of issue.\nPayment Terms: A 50% advance payment is required upon order confirmation. The remaining 50% balance is due at the time of delivery.";
+                        newTerms = "Validity: This quotation is valid for 10 days from the date of issue.\nPayment Terms: A 50% advance payment is required upon order confirmation. The remaining 50% balance is due at the time of delivery.";
                       }
                       setCurrentInvoice({...currentInvoice, docType: newType, terms: newTerms});
                     }}

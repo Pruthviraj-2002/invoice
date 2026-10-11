@@ -242,7 +242,13 @@ const InvoicePreview = React.forwardRef(({ data, company }, ref) => {
                 {data.terms.split('\n')
                   .filter(term => !/^(Delivery Timeline|Exclusions):/i.test(term.trim()))
                   .map((term, i) => (
-                  term.trim() ? <li key={i}>{term.trim()}</li> : null
+                  term.trim() ? (
+                    <li key={i}>
+                      {term.trim() === 'Validity: This quotation is valid for 30 days from the date of issue.'
+                        ? 'Validity: This quotation is valid for 10 days from the date of issue.'
+                        : term.trim()}
+                    </li>
+                  ) : null
                 ))}
               </ul>
             </div>
