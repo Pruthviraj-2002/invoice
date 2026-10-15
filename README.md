@@ -1,5 +1,9 @@
 # React + Vite
 
+## Supabase access
+
+The app does not require sign-in. Cloud deletion of synced invoices is intentionally disabled until a protected server-side delete endpoint is configured. Deleting only the browser copy would cause the invoice to reappear during cloud sync.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

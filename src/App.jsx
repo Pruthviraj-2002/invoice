@@ -25,8 +25,6 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [activeModal, setActiveModal] = useState(null); 
   const [issuedBreakdownOpen, setIssuedBreakdownOpen] = useState(false);
-  const deletedCloudInvoiceIds = useRef(new Set());
-  const deletedCloudInvoiceNumbers = useRef(new Set());
 
   const defaultInvoiceState = useMemo(() => ({
     id: null,
@@ -84,25 +82,17 @@ export default function App() {
         }
 
         if (data && data.length > 0) {
-          const cloudInvoices = data
-            .filter(item =>
-              !deletedCloudInvoiceIds.current.has(item.id) &&
-              !deletedCloudInvoiceNumbers.current.has(item.invoice_data?.invoiceNumber)
-            )
-            .map(item => ({
-              ...item.invoice_data,
-              supabaseId: item.id,
-              shareableLink: `${window.location.origin}/invoice/${item.id}`
-            }));
+          const cloudInvoices = data.map(item => ({
+            ...item.invoice_data,
+            supabaseId: item.id,
+            shareableLink: `${window.location.origin}/invoice/${item.id}`
+          }));
           
           // Merge cloud invoices with local ones, preferring cloud data to avoid duplicates
           setInvoices(prevLocalInvoices => {
             const merged = [...cloudInvoices];
             prevLocalInvoices.forEach(localInv => {
-              if (
-                !deletedCloudInvoiceNumbers.current.has(localInv.invoiceNumber) &&
-                !merged.some(cloudInv => cloudInv.invoiceNumber === localInv.invoiceNumber)
-              ) {
+              if (!merged.some(cloudInv => cloudInv.invoiceNumber === localInv.invoiceNumber)) {
                 merged.push(localInv);
               }
             });
@@ -305,42 +295,8 @@ export default function App() {
     const invoiceToDelete = activeModal?.data;
     if (!invoiceToDelete?.id) return;
 
-    setActiveModal(prev => ({ ...prev, loading: true, error: null }));
-    const showDeleteError = (message) => {
-      setActiveModal(prev => prev?.type === 'DELETE_CONFIRM'
-        ? { ...prev, loading: false, error: message }
-        : prev);
-    };
-
     if (invoiceToDelete.supabaseId) {
-      try {
-        const { data, error } = await supabase
-          .from('invoices')
-          .delete()
-          .eq('id', invoiceToDelete.supabaseId)
-          .select('id');
-
-        if (error) {
-          console.error("Supabase Error deleting document:", error);
-          showDeleteError(`Cloud deletion failed: ${error.message}`);
-          return;
-        }
-
-        if (!data?.length) {
-          showDeleteError("Cloud deletion affected no rows. Check the document ID and Supabase row-level security DELETE policy; the local copy was kept.");
-          return;
-        }
-
-        deletedCloudInvoiceIds.current.add(invoiceToDelete.supabaseId);
-        if (invoiceToDelete.invoiceNumber) {
-          deletedCloudInvoiceNumbers.current.add(invoiceToDelete.invoiceNumber);
-        }
-      } catch (err) {
-        console.error("Supabase Exception deleting document:", err);
-        const message = err instanceof Error ? err.message : String(err);
-        showDeleteError(`Cloud deletion failed: ${message}`);
-        return;
-      }
+      return;
     }
 
     setInvoices(prevInvoices => prevInvoices.filter(i => i.id !== invoiceToDelete.id));
@@ -501,19 +457,16 @@ export default function App() {
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
               {activeModal.data.supabaseId
-                ? <>Confirm permanent deletion of <strong className="text-white font-mono">{activeModal.data.invoiceNumber}</strong> from the cloud and this device. The local copy will be kept if cloud deletion fails.</>
+                ? <>Cloud deletion is currently unavailable without sign-in. <strong className="text-white font-mono">{activeModal.data.invoiceNumber}</strong> is synced to the cloud, so deleting only the local copy would cause it to reappear. A protected server endpoint is required to delete it safely.</>
                 : <>This document <strong className="text-white font-mono">{activeModal.data.invoiceNumber}</strong> has not been synced to the cloud. Delete the local copy only?</>}
             </p>
-            {activeModal.error && (
-              <div role="alert" className="rounded-xl border border-rose-500/40 bg-rose-950/50 px-4 py-3 text-xs text-rose-200">
-                {activeModal.error}
-              </div>
-            )}
             <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800">
-              <button onClick={() => setActiveModal(null)} disabled={activeModal.loading} className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition-all disabled:opacity-50">Cancel</button>
-              <button onClick={confirmDelete} disabled={activeModal.loading} className="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-rose-900/30 transition-all disabled:opacity-50">
-                {activeModal.loading ? 'Deleting…' : activeModal.data.supabaseId ? 'Delete from Cloud & Device' : 'Delete Local Copy'}
-              </button>
+              <button onClick={() => setActiveModal(null)} className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition-all">Cancel</button>
+              {!activeModal.data.supabaseId && (
+                <button onClick={confirmDelete} className="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-rose-900/30 transition-all">
+                  Delete Local Copy
+                </button>
+              )}
             </div>
           </div>
         </div>
