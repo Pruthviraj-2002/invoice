@@ -305,6 +305,13 @@ export default function App() {
     const invoiceToDelete = activeModal?.data;
     if (!invoiceToDelete?.id) return;
 
+    setActiveModal(prev => ({ ...prev, loading: true, error: null }));
+    const showDeleteError = (message) => {
+      setActiveModal(prev => prev?.type === 'DELETE_CONFIRM'
+        ? { ...prev, loading: false, error: message }
+        : prev);
+    };
+
     if (invoiceToDelete.supabaseId) {
       try {
         const { data, error } = await supabase
@@ -315,12 +322,12 @@ export default function App() {
 
         if (error) {
           console.error("Supabase Error deleting document:", error);
-          triggerToast(`Cloud deletion failed: ${error.message}`, "error");
+          showDeleteError(`Cloud deletion failed: ${error.message}`);
           return;
         }
 
         if (!data?.length) {
-          triggerToast("Cloud deletion affected no rows. Check the document ID and Supabase row-level security DELETE policy; the local copy was kept.", "error");
+          showDeleteError("Cloud deletion affected no rows. Check the document ID and Supabase row-level security DELETE policy; the local copy was kept.");
           return;
         }
 
@@ -331,7 +338,7 @@ export default function App() {
       } catch (err) {
         console.error("Supabase Exception deleting document:", err);
         const message = err instanceof Error ? err.message : String(err);
-        triggerToast(`Cloud deletion failed: ${message}`, "error");
+        showDeleteError(`Cloud deletion failed: ${message}`);
         return;
       }
     }
@@ -497,10 +504,15 @@ export default function App() {
                 ? <>Confirm permanent deletion of <strong className="text-white font-mono">{activeModal.data.invoiceNumber}</strong> from the cloud and this device. The local copy will be kept if cloud deletion fails.</>
                 : <>This document <strong className="text-white font-mono">{activeModal.data.invoiceNumber}</strong> has not been synced to the cloud. Delete the local copy only?</>}
             </p>
+            {activeModal.error && (
+              <div role="alert" className="rounded-xl border border-rose-500/40 bg-rose-950/50 px-4 py-3 text-xs text-rose-200">
+                {activeModal.error}
+              </div>
+            )}
             <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800">
-              <button onClick={() => setActiveModal(null)} className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition-all">Cancel</button>
-              <button onClick={confirmDelete} className="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-rose-900/30 transition-all">
-                {activeModal.data.supabaseId ? 'Delete from Cloud & Device' : 'Delete Local Copy'}
+              <button onClick={() => setActiveModal(null)} disabled={activeModal.loading} className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition-all disabled:opacity-50">Cancel</button>
+              <button onClick={confirmDelete} disabled={activeModal.loading} className="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-rose-900/30 transition-all disabled:opacity-50">
+                {activeModal.loading ? 'Deleting…' : activeModal.data.supabaseId ? 'Delete from Cloud & Device' : 'Delete Local Copy'}
               </button>
             </div>
           </div>
