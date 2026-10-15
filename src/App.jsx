@@ -315,12 +315,12 @@ export default function App() {
 
         if (error) {
           console.error("Supabase Error deleting document:", error);
-          triggerToast("Could not delete document from cloud. Please try again.", "error");
+          triggerToast(`Cloud deletion failed: ${error.message}`, "error");
           return;
         }
 
         if (!data?.length) {
-          triggerToast("Cloud document was not deleted. Check cloud delete permissions; the local copy was kept.", "error");
+          triggerToast("Cloud deletion affected no rows. Check the document ID and Supabase row-level security DELETE policy; the local copy was kept.", "error");
           return;
         }
 
@@ -330,7 +330,8 @@ export default function App() {
         }
       } catch (err) {
         console.error("Supabase Exception deleting document:", err);
-        triggerToast("Could not delete document from cloud. Please try again.", "error");
+        const message = err instanceof Error ? err.message : String(err);
+        triggerToast(`Cloud deletion failed: ${message}`, "error");
         return;
       }
     }
