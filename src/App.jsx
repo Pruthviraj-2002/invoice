@@ -25,6 +25,8 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [activeModal, setActiveModal] = useState(null); 
   const [issuedBreakdownOpen, setIssuedBreakdownOpen] = useState(false);
+  const deletedCloudInvoiceIds = useRef(new Set());
+  const deletedCloudInvoiceNumbers = useRef(new Set());
 
   const defaultInvoiceState = useMemo(() => ({
     id: null,
@@ -82,17 +84,25 @@ export default function App() {
         }
 
         if (data && data.length > 0) {
-          const cloudInvoices = data.map(item => ({
-            ...item.invoice_data,
-            supabaseId: item.id,
-            shareableLink: `${window.location.origin}/invoice/${item.id}`
-          }));
+          const cloudInvoices = data
+            .filter(item =>
+              !deletedCloudInvoiceIds.current.has(item.id) &&
+              !deletedCloudInvoiceNumbers.current.has(item.invoice_data?.invoiceNumber)
+            )
+            .map(item => ({
+              ...item.invoice_data,
+              supabaseId: item.id,
+              shareableLink: `${window.location.origin}/invoice/${item.id}`
+            }));
           
           // Merge cloud invoices with local ones, preferring cloud data to avoid duplicates
           setInvoices(prevLocalInvoices => {
             const merged = [...cloudInvoices];
             prevLocalInvoices.forEach(localInv => {
-              if (!merged.some(cloudInv => cloudInv.invoiceNumber === localInv.invoiceNumber)) {
+              if (
+                !deletedCloudInvoiceNumbers.current.has(localInv.invoiceNumber) &&
+                !merged.some(cloudInv => cloudInv.invoiceNumber === localInv.invoiceNumber)
+              ) {
                 merged.push(localInv);
               }
             });
@@ -291,13 +301,39 @@ export default function App() {
     setView('INVOICES');
   };
 
-  const confirmDelete = () => {
-    if (!activeModal?.data?.id) return;
-    setInvoices(invoices.filter(i => i.id !== activeModal.data.id));
-    if (currentInvoice?.id === activeModal.data.id) {
+  const confirmDelete = async () => {
+    const invoiceToDelete = activeModal?.data;
+    if (!invoiceToDelete?.id) return;
+
+    if (invoiceToDelete.supabaseId) {
+      try {
+        const { error } = await supabase
+          .from('invoices')
+          .delete()
+          .eq('id', invoiceToDelete.supabaseId);
+
+        if (error) {
+          console.error("Supabase Error deleting document:", error);
+          triggerToast("Could not delete document from cloud. Please try again.", "error");
+          return;
+        }
+
+        deletedCloudInvoiceIds.current.add(invoiceToDelete.supabaseId);
+        if (invoiceToDelete.invoiceNumber) {
+          deletedCloudInvoiceNumbers.current.add(invoiceToDelete.invoiceNumber);
+        }
+      } catch (err) {
+        console.error("Supabase Exception deleting document:", err);
+        triggerToast("Could not delete document from cloud. Please try again.", "error");
+        return;
+      }
+    }
+
+    setInvoices(prevInvoices => prevInvoices.filter(i => i.id !== invoiceToDelete.id));
+    if (currentInvoice?.id === invoiceToDelete.id) {
       setCurrentInvoice(defaultInvoiceState);
     }
-    triggerToast(`Deleted ${activeModal.data.invoiceNumber}`);
+    triggerToast(`Deleted ${invoiceToDelete.invoiceNumber}`);
     setActiveModal(null);
   };
 
@@ -450,7 +486,7 @@ export default function App() {
               <h3 className="text-lg font-black text-white">Delete Document</h3>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Are you sure you want to delete <strong className="text-white font-mono">{activeModal.data.invoiceNumber}</strong>? This action will permanently remove it from local application storage.
+              Are you sure you want to delete <strong className="text-white font-mono">{activeModal.data.invoiceNumber}</strong>? This action will permanently remove it from application storage and the cloud.
             </p>
             <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800">
               <button onClick={() => setActiveModal(null)} className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition-all">Cancel</button>
