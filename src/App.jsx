@@ -307,14 +307,20 @@ export default function App() {
 
     if (invoiceToDelete.supabaseId) {
       try {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('invoices')
           .delete()
-          .eq('id', invoiceToDelete.supabaseId);
+          .eq('id', invoiceToDelete.supabaseId)
+          .select('id');
 
         if (error) {
           console.error("Supabase Error deleting document:", error);
           triggerToast("Could not delete document from cloud. Please try again.", "error");
+          return;
+        }
+
+        if (!data?.length) {
+          triggerToast("Cloud document was not deleted. Check cloud delete permissions; the local copy was kept.", "error");
           return;
         }
 
@@ -486,11 +492,15 @@ export default function App() {
               <h3 className="text-lg font-black text-white">Delete Document</h3>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Are you sure you want to delete <strong className="text-white font-mono">{activeModal.data.invoiceNumber}</strong>? This action will permanently remove it from application storage and the cloud.
+              {activeModal.data.supabaseId
+                ? <>Confirm permanent deletion of <strong className="text-white font-mono">{activeModal.data.invoiceNumber}</strong> from the cloud and this device. The local copy will be kept if cloud deletion fails.</>
+                : <>This document <strong className="text-white font-mono">{activeModal.data.invoiceNumber}</strong> has not been synced to the cloud. Delete the local copy only?</>}
             </p>
             <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800">
               <button onClick={() => setActiveModal(null)} className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition-all">Cancel</button>
-              <button onClick={confirmDelete} className="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-rose-900/30 transition-all">Delete Record</button>
+              <button onClick={confirmDelete} className="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-rose-900/30 transition-all">
+                {activeModal.data.supabaseId ? 'Delete from Cloud & Device' : 'Delete Local Copy'}
+              </button>
             </div>
           </div>
         </div>
