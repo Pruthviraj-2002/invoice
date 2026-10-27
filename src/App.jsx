@@ -13,6 +13,16 @@ import {
   useLocalStorage, formatCurrency 
 } from './utils';
 
+const DEFAULT_DELIVERY_TERM = 'Delivery time - 45 days from receipt of purchase order and advance payment.';
+
+const getInvoiceTerms = (terms) => {
+  const existingTerms = terms || '';
+  if (existingTerms.split('\n').some(term => /^Delivery time\s*-/i.test(term.trim()))) {
+    return existingTerms;
+  }
+  return [existingTerms.trim(), DEFAULT_DELIVERY_TERM].filter(Boolean).join('\n');
+};
+
 export default function App() {
   const [view, setView] = useState('DASHBOARD'); 
   const [companySettings, setCompanySettings] = useLocalStorage('skt_company_v3', DEFAULT_COMPANY_SETTINGS);
@@ -55,7 +65,7 @@ export default function App() {
     items: [{ description: '', hsnSac: '', quantity: 1, unit: 'NOS', rate: 0, discount: 0, taxRate: 18 }],
     amountPaid: 0,
     notes: 'Thank you for your business.',
-    terms: companySettings.terms,
+    terms: getInvoiceTerms(companySettings.terms),
     totals: { subtotal: 0, totalDiscount: 0, taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, grandTotal: 0, taxSummary: {} }
   }), [companySettings.terms]);
 
@@ -782,7 +792,9 @@ export default function App() {
                     value={currentInvoice.docType} 
                     onChange={e => {
                       const newType = e.target.value;
-                      let newTerms = companySettings.terms;
+                      let newTerms = newType === 'INV'
+                        ? getInvoiceTerms(companySettings.terms)
+                        : companySettings.terms;
                       if (newType === 'EST') {
                         newTerms = "Validity: This quotation is valid for 10 days from the date of issue.\nPayment Terms: A 50% advance payment is required upon order confirmation. The remaining 50% balance is due at the time of delivery.";
                       }
@@ -1009,6 +1021,26 @@ export default function App() {
                   value={currentInvoice.notes ?? ''}
                   onChange={e => setCurrentInvoice({ ...currentInvoice, notes: e.target.value })}
                 />
+              </div>
+            </div>
+
+            <div className="bg-[#161922] p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-4 print:hidden">
+              <h3 className="text-xs font-black uppercase tracking-widest text-indigo-400 border-b border-slate-800 pb-4">
+                4. Terms &amp; Conditions
+              </h3>
+              <div>
+                <label htmlFor="invoice-terms" className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Terms to include on this document
+                </label>
+                <textarea
+                  id="invoice-terms"
+                  rows="6"
+                  placeholder="Add terms and conditions, one per line..."
+                  className="bg-[#0A0B10] border border-slate-800 text-white w-full p-3.5 rounded-2xl text-xs mt-2 focus:border-indigo-500 outline-none"
+                  value={currentInvoice.terms ?? ''}
+                  onChange={e => setCurrentInvoice({ ...currentInvoice, terms: e.target.value })}
+                />
+                <p className="text-[11px] text-slate-500 mt-2">Enter each term on a new line. Changes apply only to this document.</p>
               </div>
             </div>
 
