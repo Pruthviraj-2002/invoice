@@ -993,6 +993,25 @@ export default function App() {
               </div>
             )}
 
+            <div className="bg-[#161922] p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-4 print:hidden">
+              <h3 className="text-xs font-black uppercase tracking-widest text-indigo-400 border-b border-slate-800 pb-4">
+                3. Notes / Instructions
+              </h3>
+              <div>
+                <label htmlFor="invoice-notes" className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Notes to include on this document
+                </label>
+                <textarea
+                  id="invoice-notes"
+                  rows="4"
+                  placeholder="Add any document-specific notes or instructions..."
+                  className="bg-[#0A0B10] border border-slate-800 text-white w-full p-3.5 rounded-2xl text-xs mt-2 focus:border-indigo-500 outline-none"
+                  value={currentInvoice.notes ?? ''}
+                  onChange={e => setCurrentInvoice({ ...currentInvoice, notes: e.target.value })}
+                />
+              </div>
+            </div>
+
             <div className="space-y-4 pt-6">
               <div className="flex items-center space-x-2 print:hidden">
                 <Eye size={18} className="text-indigo-400" />

@@ -234,7 +234,7 @@ const InvoicePreview = React.forwardRef(({ data, company }, ref) => {
           <div className="grid grid-cols-2 text-[9px] border-t border-black bg-white shrink-0 relative z-10">
             <div className="p-3 border-r border-black">
               <p className="font-bold text-gray-500 uppercase tracking-wider mb-1">Notes / Instructions:</p>
-              <p className="mt-0.5 text-gray-800">{data.notes || 'Thank you for the Business'}</p>
+              <p className="mt-0.5 text-gray-800 whitespace-pre-line">{data.notes ?? 'Thank you for the Business'}</p>
             </div>
             <div className="p-3">
               <p className="font-bold text-gray-500 uppercase tracking-wider mb-1">Terms & Conditions:</p>
@@ -532,7 +532,7 @@ const InvoicePreview = React.forwardRef(({ data, company }, ref) => {
         <div className="grid grid-cols-2 text-[9px] border-t border-black bg-white shrink-0 relative z-10">
           <div className="p-2 border-r border-black">
             <p className="font-bold text-gray-500 uppercase tracking-wider mb-1">Notes / Instructions:</p>
-            <p className="mt-0.5 text-gray-800">{data.notes || 'Thank you for the Business'}</p>
+            <p className="mt-0.5 text-gray-800 whitespace-pre-line">{data.notes ?? 'Thank you for the Business'}</p>
           </div>
           <div className="p-2">
             <p className="font-bold text-gray-500 uppercase tracking-wider mb-1">Terms & Conditions:</p>
